@@ -4,66 +4,88 @@ import utils
 
 
 class NeuralNetwork:
-    def __init__(self, input_size, hidden_layer_size, output_size, learn_rate=0.01):
+    def __init__(self, input_size, hidden_layer_sizes, output_size, hidden_activ, learn_rate=0.01):
         self.input_size = input_size
-        self.hidden_layer_size = hidden_layer_size
+        self.hidden_layer_sizes = hidden_layer_sizes
         self.output_size = output_size
         self.learn_rate = learn_rate
+        self.hidden_activ = hidden_activ
+
+        self.num_hidden_layers = len(hidden_layer_sizes)
 
         # Initialize the weights and biases for hidden layers and output layer
-        self.w_i_h = np.random.rand(hidden_layer_size, input_size) - 0.5
-        self.w_h_o = np.random.rand(output_size, hidden_layer_size) - 0.5
-        self.b_i_h = np.zeros((hidden_layer_size, 1))
-        self.b_h_o = np.zeros((output_size, 1))
+        self.hidden_w = [np.random.rand(hidden_layer_sizes[0], input_size) - 0.5]
+        self.output_w = np.random.rand(output_size, hidden_layer_sizes[-1]) - 0.5
+        self.hidden_b = [np.zeros((hidden_layer_sizes[0], 1))]
+        self.output_b = np.zeros((output_size, 1))
+
+        for i in range(1, self.num_hidden_layers):
+            self.hidden_w.append(np.random.rand(hidden_layer_sizes[i], hidden_layer_sizes[i - 1]) - 0.5)
+            self.hidden_b.append(np.zeros((hidden_layer_sizes[i], 1)))
 
         self.nr_correct = 0
         self.e = 0
 
+    def hidden_activation(self, u):
+        if self.hidden_activ == "sigmoid":
+            return utils.sigmoid(u)
+        elif self.hidden_activ == "relu":
+            return utils.ReLU(u)
+
+    def hidden_activation_derivative(self, u):
+        if self.hidden_activ == "sigmoid":
+            return utils.sigmoid_derivative(u)
+        elif self.hidden_activ == "relu":
+            return utils.ReLU_derivative(u)
+
     def feedforward(self, x):
         # Forward propagation input -> hidden
-        u_1 = self.b_i_h + self.w_i_h.dot(x)
-        y_1 = utils.sigmoid(u_1)
+        y_layers = [utils.sigmoid(self.hidden_b[0] + self.hidden_w[0].dot(x))]
+
+        for i in range(1, self.num_hidden_layers):
+            y_layers.append(self.hidden_activation(self.hidden_b[i] + self.hidden_w[i].dot(y_layers[i - 1])))
 
         # Forward propagation hidden -> output
-        u_2 = self.b_h_o + self.w_h_o.dot(y_1)
-        y_2 = utils.softmax(u_2)
+        u_2 = self.output_b + self.output_w.dot(y_layers[-1])
+        y_output = utils.softmax(u_2)
 
-        return y_1, y_2
+        return y_layers, y_output
 
-    def backward(self, x, y, y_1, y_2):
+    def backward(self, x, y, y_layers, y_output):
         # Cost / Error calculation
-        self.e = 1 / len(y_2) * np.sum((y_2 - y) ** 2, axis=0)
-        self.nr_correct += int(np.argmax(y_2) == np.argmax(y))
+        self.e = 1 / len(y_output) * np.sum((y_output - y) ** 2, axis=0)
+        self.nr_correct += int(np.argmax(y_output) == np.argmax(y))
 
         # Backpropagation output -> hidden (cost function derivative)
-        delta_o = y_2 - y
-        self.w_h_o += -self.learn_rate * delta_o.dot(np.transpose(y_1))
-        self.b_h_o += -self.learn_rate * delta_o
+        delta_o = y_output - y
+        self.output_w += -self.learn_rate * delta_o.dot(np.transpose(y_layers[-1]))
+        self.output_b += -self.learn_rate * delta_o
+
         # Backpropagation hidden -> input (activation function derivative)
-        delta_h = np.transpose(self.w_h_o).dot(delta_o) * utils.sigmoid_derivative(y_1)
-        self.w_i_h += -self.learn_rate * delta_h.dot(np.transpose(x))
-        self.b_i_h += -self.learn_rate * delta_h
+        delta_layers = [np.zeros_like(layer) for layer in y_layers]
+        delta_layers[-1] = np.transpose(self.output_w).dot(delta_o) * self.hidden_activation_derivative(y_layers[-1])
 
-    def train(self, x, y, epochs=3, batch_size=32):
+        for i in range(self.num_hidden_layers - 2, -1, -1):
+            delta_layers[i] = np.transpose(self.hidden_w[i + 1]).dot(delta_layers[i + 1]) * ...
+            self.hidden_activation_derivative(y_layers[i])
+
+        self.hidden_w[0] += -self.learn_rate * delta_layers[0].dot(np.transpose(x))
+        self.hidden_b[0] += -self.learn_rate * delta_layers[0]
+
+        for i in range(1, self.num_hidden_layers):
+            self.hidden_w[i] += -self.learn_rate * delta_layers[i].dot(np.transpose(y_layers[i - 1]))
+            self.hidden_b[i] += -self.learn_rate * delta_layers[i]
+
+    def train(self, x, y, epochs=3):
         self.nr_correct = 0
-        # self.learn_rate /= batch_size
         print('Training...')
+        # TODO: Train model in batches
         for epoch in range(epochs):
-            # Shuffle the training data for each epoch
-            indices = np.arange(len(x))
-            np.random.shuffle(indices)
-            x = x[indices]
-            y = y[indices]
-
-            for i in range(0, len(x), batch_size):
-                x_batch = x[i:i + batch_size]
-                y_batch = y[i:i + batch_size]
-
-                for img, l in zip(x_batch, y_batch):
-                    img.shape += (1,)
-                    l.shape += (1,)
-                    y_1, y_2 = self.feedforward(img)
-                    self.backward(img, l, y_1, y_2)
+            for img, l in zip(x, y):
+                img.shape += (1,)
+                l.shape += (1,)
+                y_layers, y_output = self.feedforward(img)
+                self.backward(img, l, y_layers, y_output)
 
             # Show accuracy for this epoch
             print(f"Epoch {epoch + 1}/{epochs} accuracy: {self.nr_correct / x_train.shape[0]:.2f}")
@@ -75,9 +97,9 @@ class NeuralNetwork:
             img.shape += (1,)
             l.shape += (1,)
 
-            _, y_2 = self.feedforward(img)
+            _, y_output = self.feedforward(img)
 
-            self.nr_correct += int(np.argmax(y_2) == np.argmax(l))
+            self.nr_correct += int(np.argmax(y_output) == np.argmax(l))
 
         # Print the accuracy results
         print(f"Test accuracy: {self.nr_correct / x_test.shape[0]:.2f}")
@@ -93,11 +115,12 @@ x_train = np.concatenate([x_train_1, x_train_2, x_train_3, x_train_4, x_train_5]
 y_train = np.concatenate([y_train_1, y_train_2, y_train_3, y_train_4, y_train_5])
 
 input_size = 3072
-hidden_layer_size = 50
+hidden_layer_sizes = [50]
+hidden_activ = "sigmoid"
 output_size = 10
 
-nn = NeuralNetwork(input_size, hidden_layer_size, output_size, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=2, batch_size=1)
+nn = NeuralNetwork(input_size, hidden_layer_sizes, output_size, hidden_activ, learn_rate=0.01)
+nn.train(x_train, y_train, epochs=2)
 
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 nn.predict(x_test, y_test)
