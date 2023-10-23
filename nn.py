@@ -44,20 +44,29 @@ class NeuralNetwork:
         self.w_i_h += -self.learn_rate * delta_h.dot(np.transpose(x))
         self.b_i_h += -self.learn_rate * delta_h
 
-    def train(self, x, y, epochs=3):
+    def train(self, x, y, epochs=3, batch_size=32):
         self.nr_correct = 0
+        # self.learn_rate /= batch_size
         print('Training...')
-        # TODO: Train in batches
         for epoch in range(epochs):
-            for img, l in zip(x, y):
-                img.shape += (1,)
-                l.shape += (1,)
+            # Shuffle the training data for each epoch
+            indices = np.arange(len(x))
+            np.random.shuffle(indices)
+            x = x[indices]
+            y = y[indices]
 
-                y_1, y_2 = self.feedforward(img)
-                self.backward(img, l, y_1, y_2)
+            for i in range(0, len(x), batch_size):
+                x_batch = x[i:i + batch_size]
+                y_batch = y[i:i + batch_size]
+
+                for img, l in zip(x_batch, y_batch):
+                    img.shape += (1,)
+                    l.shape += (1,)
+                    y_1, y_2 = self.feedforward(img)
+                    self.backward(img, l, y_1, y_2)
 
             # Show accuracy for this epoch
-            print(f"Epoch {epoch + 1} accuracy: {self.nr_correct / x_train.shape[0]:.2f}")
+            print(f"Epoch {epoch + 1}/{epochs} accuracy: {self.nr_correct / x_train.shape[0]:.2f}")
             self.nr_correct = 0
 
     def predict(self, x, y):
@@ -88,7 +97,7 @@ hidden_layer_size = 50
 output_size = 10
 
 nn = NeuralNetwork(input_size, hidden_layer_size, output_size, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=5)
+nn.train(x_train, y_train, epochs=2, batch_size=1)
 
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 nn.predict(x_test, y_test)
