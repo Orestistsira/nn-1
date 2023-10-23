@@ -88,7 +88,7 @@ hidden_layer_size = 50
 output_size = 10
 
 nn = NeuralNetwork(input_size, hidden_layer_size, output_size, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=3)
+nn.train(x_train, y_train, epochs=5)
 
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 nn.predict(x_test, y_test)
