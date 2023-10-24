@@ -54,12 +54,12 @@ class NeuralNetwork:
     def backward(self, x, y, y_layers, y_output):
         # Cost / Error calculation
         self.e = 1 / len(y_output) * np.sum((y_output - y) ** 2, axis=0)
-        self.nr_correct += int(np.argmax(y_output) == np.argmax(y))
+        self.nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(y, axis=0))
 
         # Backpropagation output -> hidden (cost function derivative)
         delta_o = y_output - y
         self.output_w += -self.learn_rate * delta_o.dot(np.transpose(y_layers[-1]))
-        self.output_b += -self.learn_rate * delta_o
+        self.output_b += -self.learn_rate * delta_o.sum(axis=1, keepdims=True)
 
         # Backpropagation hidden -> input (activation function derivative)
         delta_layers = [np.zeros_like(layer) for layer in y_layers]
@@ -70,22 +70,35 @@ class NeuralNetwork:
             self.hidden_activation_derivative(y_layers[i])
 
         self.hidden_w[0] += -self.learn_rate * delta_layers[0].dot(np.transpose(x))
-        self.hidden_b[0] += -self.learn_rate * delta_layers[0]
+        self.hidden_b[0] += -self.learn_rate * delta_layers[0].sum(axis=1, keepdims=True)
 
         for i in range(1, self.num_hidden_layers):
             self.hidden_w[i] += -self.learn_rate * delta_layers[i].dot(np.transpose(y_layers[i - 1]))
-            self.hidden_b[i] += -self.learn_rate * delta_layers[i]
+            self.hidden_b[i] += -self.learn_rate * delta_layers[i].sum(axis=1, keepdims=True)
 
-    def train(self, x, y, epochs=3):
+    def train(self, x, y, epochs=3, batch_size=32):
         self.nr_correct = 0
+        self.learn_rate /= batch_size
         print('Training...')
         # TODO: Train model in batches
         for epoch in range(epochs):
-            for img, l in zip(x, y):
-                img.shape += (1,)
-                l.shape += (1,)
-                y_layers, y_output = self.feedforward(img)
-                self.backward(img, l, y_layers, y_output)
+            # Shuffle the data for each epoch to introduce randomness
+            indices = np.arange(len(x))
+            np.random.shuffle(indices)
+            x_shuffled = x[indices]
+            y_shuffled = y[indices]
+
+            for batch_start in range(0, len(x_shuffled), batch_size):
+                batch_end = batch_start + batch_size
+                batch_x = x_shuffled[batch_start:batch_end]
+                batch_y = y_shuffled[batch_start:batch_end]
+
+                batch_x = batch_x.reshape((batch_x.shape[0], -1)).T  # Reshape the batch data
+                batch_y = batch_y.T
+
+                # Forward and backward pass for the batch
+                y_layers, y_output = self.feedforward(batch_x)
+                self.backward(batch_x, batch_y, y_layers, y_output)
 
             # Show accuracy for this epoch
             print(f"Epoch {epoch + 1}/{epochs} accuracy: {self.nr_correct / x_train.shape[0]:.2f}")
@@ -120,7 +133,7 @@ hidden_activ = "sigmoid"
 output_size = 10
 
 nn = NeuralNetwork(input_size, hidden_layer_sizes, output_size, hidden_activ, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=2)
+nn.train(x_train, y_train, epochs=10, batch_size=10)
 
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 nn.predict(x_test, y_test)
