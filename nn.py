@@ -40,7 +40,7 @@ class NeuralNetwork:
 
     def feedforward(self, x):
         # Forward propagation input -> hidden
-        y_layers = [utils.sigmoid(self.hidden_b[0] + self.hidden_w[0].dot(x))]
+        y_layers = [self.hidden_activation(self.hidden_b[0] + self.hidden_w[0].dot(x))]
 
         for i in range(1, self.num_hidden_layers):
             y_layers.append(self.hidden_activation(self.hidden_b[i] + self.hidden_w[i].dot(y_layers[i - 1])))
