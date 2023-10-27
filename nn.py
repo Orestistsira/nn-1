@@ -64,19 +64,19 @@ class NeuralNetwork:
         self.output_b += -self.learn_rate * delta_o.sum(axis=1, keepdims=True)
 
         # Backpropagation hidden -> input (activation function derivative)
-        delta_layers = [np.zeros_like(layer) for layer in y_layers]
-        delta_layers[-1] = np.transpose(self.output_w).dot(delta_o) * self.hidden_activation_derivative(y_layers[-1])
+        delta_l = np.transpose(self.output_w).dot(delta_o) * self.hidden_activation_derivative(y_layers[-1])
 
-        for i in range(self.num_hidden_layers - 2, -1, -1):
-            delta_layers[i] = np.transpose(self.hidden_w[i + 1]).dot(delta_layers[i + 1]) * ...
-            self.hidden_activation_derivative(y_layers[i])
+        for i in range(self.num_hidden_layers - 1, 0, -1):
+            # Update weights and biases for the current hidden layer
+            self.hidden_w[i] += -self.learn_rate * delta_l.dot(np.transpose(y_layers[i - 1]))
+            self.hidden_b[i] += -self.learn_rate * delta_l.sum(axis=1, keepdims=True)
 
-        self.hidden_w[0] += -self.learn_rate * delta_layers[0].dot(np.transpose(x))
-        self.hidden_b[0] += -self.learn_rate * delta_layers[0].sum(axis=1, keepdims=True)
+            delta_l = np.transpose(self.hidden_w[i]).dot(delta_l) * self.hidden_activation_derivative(
+                y_layers[i - 1])
 
-        for i in range(1, self.num_hidden_layers):
-            self.hidden_w[i] += -self.learn_rate * delta_layers[i].dot(np.transpose(y_layers[i - 1]))
-            self.hidden_b[i] += -self.learn_rate * delta_layers[i].sum(axis=1, keepdims=True)
+        # Update the first hidden layer's weights and biases using the input data
+        self.hidden_w[0] += -self.learn_rate * delta_l.dot(np.transpose(x))
+        self.hidden_b[0] += -self.learn_rate * delta_l.sum(axis=1, keepdims=True)
 
     def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
         self.learn_rate /= batch_size
