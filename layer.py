@@ -26,16 +26,16 @@ class DenseLayer(Layer):
 
     def forward(self, input):
         self.input = input
-        return apply_activation(self.activation, np.dot(self.weights, self.input) + self.bias)
+        return apply_activation(self.activation, self.bias + self.weights.dot(self.input))
 
-    def backward(self, delta, learning_rate):
-        weights_grad = np.dot(delta, self.input.T)
+    def backward(self, delta, learn_rate):
+        weights_grad = delta.dot(self.input.T)
 
-        self.weights -= learning_rate * weights_grad
-        self.bias -= learning_rate * delta.sum(axis=1, keepdims=True)
+        self.weights -= learn_rate * weights_grad
+        self.bias -= learn_rate * delta.sum(axis=1, keepdims=True)
 
     def update_grad(self, delta, prev_activation):
-        delta = np.dot(self.weights.T, delta) * apply_activation_derivative(prev_activation, self.input)
+        delta = self.weights.T.dot(delta) * apply_activation_derivative(prev_activation, self.input)
         return delta
 
 
@@ -48,6 +48,8 @@ def apply_activation(activation, u):
         return utils.tanh(u)
     elif activation == "softmax":
         return utils.softmax(u)
+    else:
+        raise ValueError(f'There is no activation function = {activation}')
 
 
 def apply_activation_derivative(activation, u):
@@ -57,3 +59,5 @@ def apply_activation_derivative(activation, u):
         return utils.ReLU_derivative(u)
     elif activation == "tanh":
         return utils.tanh_derivative(u)
+    else:
+        raise ValueError(f'There is no activation function derivative = {activation}')

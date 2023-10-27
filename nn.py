@@ -91,8 +91,7 @@ y_train = np.concatenate([y_train_1, y_train_2, y_train_3, y_train_4, y_train_5]
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 
 input_size = 3072
-hidden_layer_size = 70
-hidden_activ = "sigmoid"
+hidden_layer_size = 50
 output_size = 10
 
 layers = [
@@ -101,7 +100,7 @@ layers = [
 ]
 
 nn = NeuralNetwork(layers, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=50, batch_size=10, validation_data=(x_test, y_test))
+nn.train(x_train, y_train, epochs=10, batch_size=10, validation_data=(x_test, y_test))
 
 accuracy = nn.predict(x_test, y_test)
 
