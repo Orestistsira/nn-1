@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from math import exp
 
 
 def unpickle(file):
@@ -38,6 +39,14 @@ def ReLU(x):
 
 def ReLU_derivative(x):
     return x > 0
+
+
+def tanh(x):
+    return np.tanh(x)
+
+
+def tanh_derivative(x):
+    return 1. - np.tanh(x) ** 2
 
 
 def softmax(x):

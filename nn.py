@@ -23,7 +23,6 @@ class NeuralNetwork:
             self.hidden_w.append(np.random.rand(hidden_layer_sizes[i], hidden_layer_sizes[i - 1]) - 0.5)
             self.hidden_b.append(np.zeros((hidden_layer_sizes[i], 1)))
 
-        self.nr_correct = 0
         self.e = 0
 
     def hidden_activation(self, u):
@@ -31,12 +30,16 @@ class NeuralNetwork:
             return utils.sigmoid(u)
         elif self.hidden_activ == "relu":
             return utils.ReLU(u)
+        elif self.hidden_activ == "tanh":
+            return utils.tanh(u)
 
     def hidden_activation_derivative(self, u):
         if self.hidden_activ == "sigmoid":
             return utils.sigmoid_derivative(u)
         elif self.hidden_activ == "relu":
             return utils.ReLU_derivative(u)
+        elif self.hidden_activ == "tanh":
+            return utils.tanh_derivative(u)
 
     def feedforward(self, x):
         # Forward propagation input -> hidden
@@ -54,7 +57,6 @@ class NeuralNetwork:
     def backward(self, x, y, y_layers, y_output):
         # Cost / Error calculation
         self.e = 1 / len(y_output) * np.sum((y_output - y) ** 2, axis=0)
-        self.nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(y, axis=0))
 
         # Backpropagation output -> hidden (cost function derivative)
         delta_o = y_output - y
@@ -76,12 +78,11 @@ class NeuralNetwork:
             self.hidden_w[i] += -self.learn_rate * delta_layers[i].dot(np.transpose(y_layers[i - 1]))
             self.hidden_b[i] += -self.learn_rate * delta_layers[i].sum(axis=1, keepdims=True)
 
-    def train(self, x, y, epochs=3, batch_size=32):
-        self.nr_correct = 0
+    def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
         self.learn_rate /= batch_size
         print('Training...')
-        # TODO: Train model in batches
         for epoch in range(epochs):
+            nr_correct = 0
             # Shuffle the data for each epoch to introduce randomness
             indices = np.arange(len(x))
             np.random.shuffle(indices)
@@ -98,24 +99,27 @@ class NeuralNetwork:
 
                 # Forward and backward pass for the batch
                 y_layers, y_output = self.feedforward(batch_x)
+                nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(batch_y, axis=0))
                 self.backward(batch_x, batch_y, y_layers, y_output)
 
+            test_acc = nr_correct / x_train.shape[0]
+            val_acc = 0
+            if validation_data:
+                val_acc = self.predict(validation_data[0], validation_data[1])
+
             # Show accuracy for this epoch
-            print(f"Epoch {epoch + 1}/{epochs} accuracy: {self.nr_correct / x_train.shape[0]:.2f}")
-            self.nr_correct = 0
+            print(f"Epoch {epoch + 1}/{epochs} test accuracy: {test_acc:.2f} - val accuracy: {val_acc:.2f}")
 
     def predict(self, x, y):
-        print('Testing...')
+        nr_correct = 0
         for img, l in zip(x, y):
             img.shape += (1,)
             l.shape += (1,)
 
             _, y_output = self.feedforward(img)
+            nr_correct += int(np.argmax(y_output) == np.argmax(l))
 
-            self.nr_correct += int(np.argmax(y_output) == np.argmax(l))
-
-        # Print the accuracy results
-        print(f"Test accuracy: {self.nr_correct / x_test.shape[0]:.2f}")
+        return nr_correct / x_test.shape[0]
 
 
 x_train_1, y_train_1 = utils.unpickle("cifar-10/data_batch_1")
@@ -127,13 +131,17 @@ x_train_5, y_train_5 = utils.unpickle("cifar-10/data_batch_5")
 x_train = np.concatenate([x_train_1, x_train_2, x_train_3, x_train_4, x_train_5])
 y_train = np.concatenate([y_train_1, y_train_2, y_train_3, y_train_4, y_train_5])
 
+x_test, y_test = utils.unpickle("cifar-10/test_batch")
+
 input_size = 3072
 hidden_layer_sizes = [50]
 hidden_activ = "sigmoid"
 output_size = 10
 
 nn = NeuralNetwork(input_size, hidden_layer_sizes, output_size, hidden_activ, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=10, batch_size=10)
+nn.train(x_train, y_train, epochs=10, batch_size=10, validation_data=(x_test, y_test))
 
-x_test, y_test = utils.unpickle("cifar-10/test_batch")
-nn.predict(x_test, y_test)
+accuracy = nn.predict(x_test, y_test)
+
+# Print the accuracy results
+print(f"Test accuracy: {accuracy:.2f}")
