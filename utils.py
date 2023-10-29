@@ -53,6 +53,10 @@ def softmax(x):
     return np.exp(x) / sum(np.exp(x))
 
 
+def softmax_derivative(x):
+    return np.diagflat(x) - np.dot(x, x.T)
+
+
 def show_image(x, y, prediction):
     classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 

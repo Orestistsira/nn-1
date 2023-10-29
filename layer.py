@@ -59,5 +59,7 @@ def apply_activation_derivative(activation, u):
         return utils.ReLU_derivative(u)
     elif activation == "tanh":
         return utils.tanh_derivative(u)
+    elif activation == "softmax":
+        return utils.softmax_derivative(u)
     else:
         raise ValueError(f'There is no activation function derivative = {activation}')
