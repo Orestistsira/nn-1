@@ -14,15 +14,15 @@ def unpickle(file):
     x = x.astype('float32')  # this is necessary for the division below
     x /= 255
 
-    y_temp = np.zeros((len(y), 10))
-    for i in range(len(y)):
-        k = y[i]
-        y_temp[i] = np.zeros(10)
-        y_temp[i][k] = 1
-
-    y = y_temp
+    y = to_categorical(y, 10)
 
     return x, y
+
+
+def to_categorical(labels, num_classes):
+    categorical_labels = np.zeros((len(labels), num_classes))
+    categorical_labels[np.arange(len(labels)), labels] = 1
+    return categorical_labels
 
 
 def sigmoid(x):
