@@ -19,6 +19,7 @@ class NeuralNetwork:
         return y_output
 
     def backward(self, y, y_output):
+        # TODO: Calculate the error for batches
         # Cost / Error calculation
         self.e = 1 / len(y_output) * np.sum((y_output - y) ** 2, axis=0)
 
@@ -38,6 +39,7 @@ class NeuralNetwork:
     def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
         self.learn_rate /= batch_size
         print('Training...')
+        # TODO: Plot diagrams with the training statistics
         for epoch in range(epochs):
             nr_correct = 0
             # Shuffle the data for each epoch to introduce randomness

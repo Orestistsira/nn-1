@@ -1,6 +1,5 @@
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
 from sklearn.metrics import accuracy_score
 
 
@@ -52,13 +51,13 @@ y_pred_knn_3 = knn_3.predict(x_test)
 accuracy_knn_3 = accuracy_score(y_test, y_pred_knn_3)
 print("3-NN Classifier Accuracy:", accuracy_knn_3)
 
-# Define and train nearest-center classifier (using K-Means)
-kmeans = MiniBatchKMeans(n_clusters=10, n_init=10)
-kmeans.fit(x_train)
+# Define and train the NearestCentroid classifier
+nearest_centroid = NearestCentroid()
+nearest_centroid.fit(x_train, y_train)
 
-# Predict with nearest-center classifier
-y_pred_nearest_center = kmeans.predict(x_test)
+# Predict with the NearestCentroid classifier
+y_pred_nearest_centroid = nearest_centroid.predict(x_test)
 
-# Calculate accuracy for nearest-center classifier
-accuracy_nearest_center = accuracy_score(y_test, y_pred_nearest_center)
-print("Nearest-Center Classifier Accuracy:", accuracy_nearest_center)
+# Calculate accuracy for the NearestCentroid classifier
+accuracy_nearest_centroid = accuracy_score(y_test, y_pred_nearest_centroid)
+print("NearestCentroid Classifier Accuracy:", accuracy_nearest_centroid)
