@@ -8,7 +8,6 @@ class NeuralNetwork:
     def __init__(self, layers, learn_rate=0.01):
         self.learn_rate = learn_rate
         self.layers = layers
-        self.e = 0
 
     def feedforward(self, x):
         y_output = x
@@ -19,10 +18,7 @@ class NeuralNetwork:
         return y_output
 
     def backward(self, y, y_output):
-        # TODO: Calculate the error for batches
-        # Cost / Error calculation
-        self.e = 1 / len(y_output) * np.sum((y_output - y) ** 2, axis=0)
-
+        # TODO: Add momentum to training
         # Backpropagation
         delta = y_output - y
         for i in range(len(layers) - 1, 0, -1):
@@ -39,9 +35,13 @@ class NeuralNetwork:
     def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
         self.learn_rate /= batch_size
         print('Training...')
-        # TODO: Plot diagrams with the training statistics
+        train_acc_history = []  # List to store test accuracy for each epoch
+        test_acc_history = []  # List to store validation accuracy for each epoch
+        error_history = []
+
         for epoch in range(epochs):
             nr_correct = 0
+            e = []
             # Shuffle the data for each epoch to introduce randomness
             indices = np.arange(len(x))
             np.random.shuffle(indices)
@@ -61,13 +61,50 @@ class NeuralNetwork:
                 nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(batch_y, axis=0))
                 self.backward(batch_y, y_output)
 
-            test_acc = nr_correct / x_train.shape[0]
-            val_acc = 0
+                # Cost / Error calculation
+                e.append(np.sum(1 / len(y_output) * np.sum((y_output - batch_y) ** 2, axis=0)))
+
+            # History
+            error_history.append(np.mean(e))
+
+            train_acc = nr_correct / x_train.shape[0]
+            test_acc = 0
             if validation_data:
-                val_acc = self.predict(validation_data[0], validation_data[1])
+                test_acc = self.predict(validation_data[0], validation_data[1])
+
+            train_acc_history.append(train_acc)
+            test_acc_history.append(test_acc)
 
             # Show accuracy for this epoch
-            print(f"Epoch {epoch + 1}/{epochs} test accuracy: {test_acc:.2f} - val accuracy: {val_acc:.2f}")
+            print(f"Epoch {epoch + 1}/{epochs} train accuracy: {train_acc:.2f} - test accuracy: {test_acc:.2f}")
+
+        # Plot the training history
+        self.plot_training_history(train_acc_history, test_acc_history, error_history)
+
+    def plot_training_history(self, train_acc_history, test_acc_history, error_history):
+        epochs = list(range(1, len(train_acc_history) + 1))
+        # Create a single figure with two subplots (2 rows, 1 column)
+        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+        axes[0].plot(epochs, train_acc_history, label='Train Accuracy')
+        axes[0].plot(epochs, test_acc_history, label='Test Accuracy')
+        axes[0].set_xlabel('Epoch')
+        axes[0].set_ylabel('Accuracy')
+        axes[0].set_title('Training History')
+        axes[0].set_xticks(epochs)
+        axes[0].legend()
+        axes[0].grid()
+
+        axes[1].plot(epochs, error_history, label='Error')
+        axes[1].set_xlabel('Epoch')
+        axes[1].set_ylabel('Error')
+        axes[1].set_title('Error History')
+        axes[1].set_xticks(epochs)
+        axes[1].legend()
+        axes[1].grid()
+
+        plt.tight_layout()
+        plt.show()
 
     def predict(self, x, y):
         nr_correct = 0
