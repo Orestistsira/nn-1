@@ -79,7 +79,7 @@ class NeuralNetwork:
             print(f"Epoch {epoch + 1}/{epochs} train accuracy: {train_acc:.2f} - test accuracy: {test_acc:.2f}")
 
         # Plot the training history
-        self.plot_training_history(train_acc_history, test_acc_history, error_history)
+        # self.plot_training_history(train_acc_history, test_acc_history, error_history)
 
     def plot_training_history(self, train_acc_history, test_acc_history, error_history):
         epochs = list(range(1, len(train_acc_history) + 1))
@@ -91,7 +91,6 @@ class NeuralNetwork:
         axes[0].set_xlabel('Epoch')
         axes[0].set_ylabel('Accuracy')
         axes[0].set_title('Training History')
-        axes[0].set_xticks(epochs)
         axes[0].legend()
         axes[0].grid()
 
@@ -99,7 +98,6 @@ class NeuralNetwork:
         axes[1].set_xlabel('Epoch')
         axes[1].set_ylabel('Error')
         axes[1].set_title('Error History')
-        axes[1].set_xticks(epochs)
         axes[1].legend()
         axes[1].grid()
 
