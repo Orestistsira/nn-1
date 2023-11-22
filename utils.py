@@ -69,3 +69,27 @@ def show_image(x, y, prediction):
     plt.title(f"Label: {classes[np.argmax(y)]} Prediction: {classes[np.argmax(prediction)]}")
     plt.axis('off')
     plt.show()
+
+
+def plot_training_history(train_acc_history, test_acc_history, error_history):
+    epochs = list(range(1, len(train_acc_history) + 1))
+    # Create a single figure with two subplots (2 rows, 1 column)
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+    axes[0].plot(epochs, train_acc_history, label='Train Accuracy')
+    axes[0].plot(epochs, test_acc_history, label='Test Accuracy')
+    axes[0].set_xlabel('Epoch')
+    axes[0].set_ylabel('Accuracy')
+    axes[0].set_title('Training History')
+    axes[0].legend()
+    axes[0].grid()
+
+    axes[1].plot(epochs, error_history, label='Error')
+    axes[1].set_xlabel('Epoch')
+    axes[1].set_ylabel('Error')
+    axes[1].set_title('Error History')
+    axes[1].legend()
+    axes[1].grid()
+
+    plt.tight_layout()
+    plt.show()

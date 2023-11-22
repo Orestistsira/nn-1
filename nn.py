@@ -21,16 +21,16 @@ class NeuralNetwork:
         # TODO: Add momentum to training
         # Backpropagation
         delta = y_output - y
-        for i in range(len(layers) - 1, 0, -1):
+        for i in range(len(self.layers) - 1, 0, -1):
             # Update layer weights and biases
-            layer = layers[i]
+            layer = self.layers[i]
             layer.backward(delta, self.learn_rate)
 
             # Update gradients
-            prev_activation = layers[i - 1].activation
+            prev_activation = self.layers[i - 1].activation
             delta = layer.update_grad(delta, prev_activation)
 
-        layers[0].backward(delta, self.learn_rate)
+        self.layers[0].backward(delta, self.learn_rate)
 
     def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
         self.learn_rate /= batch_size
@@ -79,30 +79,7 @@ class NeuralNetwork:
             print(f"Epoch {epoch + 1}/{epochs} train accuracy: {train_acc:.2f} - test accuracy: {test_acc:.2f}")
 
         # Plot the training history
-        # self.plot_training_history(train_acc_history, test_acc_history, error_history)
-
-    def plot_training_history(self, train_acc_history, test_acc_history, error_history):
-        epochs = list(range(1, len(train_acc_history) + 1))
-        # Create a single figure with two subplots (2 rows, 1 column)
-        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-
-        axes[0].plot(epochs, train_acc_history, label='Train Accuracy')
-        axes[0].plot(epochs, test_acc_history, label='Test Accuracy')
-        axes[0].set_xlabel('Epoch')
-        axes[0].set_ylabel('Accuracy')
-        axes[0].set_title('Training History')
-        axes[0].legend()
-        axes[0].grid()
-
-        axes[1].plot(epochs, error_history, label='Error')
-        axes[1].set_xlabel('Epoch')
-        axes[1].set_ylabel('Error')
-        axes[1].set_title('Error History')
-        axes[1].legend()
-        axes[1].grid()
-
-        plt.tight_layout()
-        plt.show()
+        # utils.plot_training_history(train_acc_history, test_acc_history, error_history)
 
     def predict(self, x, y):
         nr_correct = 0
@@ -131,13 +108,13 @@ input_size = 3072
 hidden_layer_size = 50
 output_size = 10
 
-layers = [
+dense_layers = [
     DenseLayer(input_size, hidden_layer_size, activation="sigmoid"),
     DenseLayer(hidden_layer_size, output_size, activation="softmax")
 ]
 
-nn = NeuralNetwork(layers, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=10, batch_size=10, validation_data=(x_test, y_test))
+nn = NeuralNetwork(dense_layers, learn_rate=0.01)
+nn.train(x_train, y_train, epochs=3, batch_size=10, validation_data=(x_test, y_test))
 
 accuracy = nn.predict(x_test, y_test)
 
