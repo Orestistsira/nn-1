@@ -87,7 +87,7 @@ class NeuralNetwork:
             print(f"Epoch {epoch + 1}/{epochs} train accuracy: {train_acc:.2f} - test accuracy: {test_acc:.2f}")
 
         # Plot the training history
-        utils.plot_training_history(history)
+        history.plot_training_history()
 
     def predict(self, x, y):
         nr_correct = 0
