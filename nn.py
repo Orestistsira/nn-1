@@ -1,13 +1,15 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import utils
-from layer import DenseLayer
+from history import History
 
 
 class NeuralNetwork:
     def __init__(self, layers, learn_rate=0.01):
         self.learn_rate = learn_rate
         self.layers = layers
+        self.hidden_layers_sizes = []
+        for i in range(1, len(self.layers)):
+            self.hidden_layers_sizes.append(layers[i].input_size)
 
     def feedforward(self, x):
         y_output = x
@@ -33,11 +35,17 @@ class NeuralNetwork:
         self.layers[0].backward(delta, self.learn_rate)
 
     def train(self, x, y, epochs=3, batch_size=32, validation_data=()):
+        history = History()
+        history.hyperparams = {
+            'num_of_hidden_layers': len(self.layers) - 1,
+            'hid_layers_sizes': self.hidden_layers_sizes,
+            'learn_rate': self.learn_rate,
+            'batch_size': batch_size
+        }
+
+        # Divide learning rate with tha batch size in order to average out the added gradients
         self.learn_rate /= batch_size
         print('Training...')
-        train_acc_history = []  # List to store test accuracy for each epoch
-        test_acc_history = []  # List to store validation accuracy for each epoch
-        error_history = []
 
         for epoch in range(epochs):
             nr_correct = 0
@@ -65,21 +73,21 @@ class NeuralNetwork:
                 e.append(np.sum(1 / len(y_output) * np.sum((y_output - batch_y) ** 2, axis=0)))
 
             # History
-            error_history.append(np.mean(e))
+            history.error_history.append(np.mean(e))
 
-            train_acc = nr_correct / x_train.shape[0]
+            train_acc = nr_correct / x.shape[0]
             test_acc = 0
             if validation_data:
                 test_acc = self.predict(validation_data[0], validation_data[1])
 
-            train_acc_history.append(train_acc)
-            test_acc_history.append(test_acc)
+            history.train_acc_history.append(train_acc)
+            history.test_acc_history.append(test_acc)
 
             # Show accuracy for this epoch
             print(f"Epoch {epoch + 1}/{epochs} train accuracy: {train_acc:.2f} - test accuracy: {test_acc:.2f}")
 
         # Plot the training history
-        # utils.plot_training_history(train_acc_history, test_acc_history, error_history)
+        utils.plot_training_history(history)
 
     def predict(self, x, y):
         nr_correct = 0
@@ -90,33 +98,4 @@ class NeuralNetwork:
             y_output = self.feedforward(img)
             nr_correct += int(np.argmax(y_output) == np.argmax(l))
 
-        return nr_correct / x_test.shape[0]
-
-
-x_train_1, y_train_1 = utils.unpickle("cifar-10/data_batch_1")
-x_train_2, y_train_2 = utils.unpickle("cifar-10/data_batch_2")
-x_train_3, y_train_3 = utils.unpickle("cifar-10/data_batch_3")
-x_train_4, y_train_4 = utils.unpickle("cifar-10/data_batch_4")
-x_train_5, y_train_5 = utils.unpickle("cifar-10/data_batch_5")
-
-x_train = np.concatenate([x_train_1, x_train_2, x_train_3, x_train_4, x_train_5])
-y_train = np.concatenate([y_train_1, y_train_2, y_train_3, y_train_4, y_train_5])
-
-x_test, y_test = utils.unpickle("cifar-10/test_batch")
-
-input_size = 3072
-hidden_layer_size = 50
-output_size = 10
-
-dense_layers = [
-    DenseLayer(input_size, hidden_layer_size, activation="sigmoid"),
-    DenseLayer(hidden_layer_size, output_size, activation="softmax")
-]
-
-nn = NeuralNetwork(dense_layers, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=3, batch_size=10, validation_data=(x_test, y_test))
-
-accuracy = nn.predict(x_test, y_test)
-
-# Print the accuracy results
-print(f"Test accuracy: {accuracy:.2f}")
+        return nr_correct / x.shape[0]

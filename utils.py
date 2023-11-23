@@ -1,6 +1,7 @@
+from uuid import uuid4
+
 import numpy as np
 from matplotlib import pyplot as plt
-from math import exp
 
 
 def unpickle(file):
@@ -71,25 +72,31 @@ def show_image(x, y, prediction):
     plt.show()
 
 
-def plot_training_history(train_acc_history, test_acc_history, error_history):
-    epochs = list(range(1, len(train_acc_history) + 1))
+def plot_training_history(history):
+    epochs = list(range(1, len(history.train_acc_history) + 1))
     # Create a single figure with two subplots (2 rows, 1 column)
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 
-    axes[0].plot(epochs, train_acc_history, label='Train Accuracy')
-    axes[0].plot(epochs, test_acc_history, label='Test Accuracy')
+    axes[0].plot(epochs, history.train_acc_history, label='Train Accuracy')
+    axes[0].plot(epochs, history.test_acc_history, label='Test Accuracy')
     axes[0].set_xlabel('Epoch')
     axes[0].set_ylabel('Accuracy')
     axes[0].set_title('Training History')
     axes[0].legend()
     axes[0].grid()
 
-    axes[1].plot(epochs, error_history, label='Error')
+    axes[1].plot(epochs, history.error_history, label='Error')
     axes[1].set_xlabel('Epoch')
     axes[1].set_ylabel('Error')
     axes[1].set_title('Error History')
     axes[1].legend()
     axes[1].grid()
 
+    num_of_hidden_layers = history.hyperparams['num_of_hidden_layers']
+    hid_layers_sizes = history.hyperparams['hid_layers_sizes']
+    learn_rate = history.hyperparams['learn_rate']
+    batch_size = history.hyperparams['batch_size']
+
+    fig.suptitle(f'hidden layers = {num_of_hidden_layers}, hidden layers sizes = {hid_layers_sizes}, learning rate = {learn_rate}, batch size = {batch_size}')
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'history/history-{num_of_hidden_layers}-{hid_layers_sizes}-{learn_rate}-{batch_size}.jpg')
