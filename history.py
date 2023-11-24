@@ -6,7 +6,7 @@ class History:
         self.hyperparams = {}
         self.train_acc_history = []
         self.test_acc_history = []
-        self.error_history = []
+        self.loss_history = []
 
     def plot_training_history(self):
         epochs = list(range(1, len(self.train_acc_history) + 1))
@@ -21,10 +21,10 @@ class History:
         axes[0].legend()
         axes[0].grid()
 
-        axes[1].plot(epochs, self.error_history, label='Error')
+        axes[1].plot(epochs, self.loss_history, label='Loss')
         axes[1].set_xlabel('Epoch')
-        axes[1].set_ylabel('Error')
-        axes[1].set_title('Error History')
+        axes[1].set_ylabel('Loss')
+        axes[1].set_title('Loss History')
         axes[1].legend()
         axes[1].grid()
 

@@ -49,11 +49,15 @@ def tanh_derivative(x):
 
 
 def softmax(x):
-    return np.exp(x) / sum(np.exp(x))
+    e_x = np.exp(x - np.max(x))  # Subtracting max(x) for numerical stability
+    return e_x / e_x.sum(axis=0)
 
 
 def softmax_derivative(x):
-    return np.diagflat(x) - np.dot(x, x.T)
+    s = softmax(x)
+    outer = np.outer(s, s)
+    diag = np.diag(s)
+    return diag - outer
 
 
 def show_image(x, y, prediction):

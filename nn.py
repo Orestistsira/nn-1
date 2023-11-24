@@ -43,13 +43,13 @@ class NeuralNetwork:
             'batch_size': batch_size
         }
 
-        # Divide learning rate with tha batch size in order to average out the added gradients
+        # Divide learning rate with the batch size in order to average out the added gradients
         self.learn_rate /= batch_size
         print('Training...')
 
         for epoch in range(epochs):
             nr_correct = 0
-            e = []
+            loss = []
             # Shuffle the data for each epoch to introduce randomness
             indices = np.arange(len(x))
             np.random.shuffle(indices)
@@ -69,11 +69,12 @@ class NeuralNetwork:
                 nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(batch_y, axis=0))
                 self.backward(batch_y, y_output)
 
-                # Cost / Error calculation
-                e.append(np.sum(1 / len(y_output) * np.sum((y_output - batch_y) ** 2, axis=0)))
+                # Loss / Error calculation
+                # e.append(np.sum(1 / len(y_output) * np.sum((y_output - batch_y) ** 2, axis=0)))
+                loss.append(np.mean(np.mean(-batch_y * np.log(y_output) - (1 - batch_y) * np.log(1 - y_output), axis=0)))
 
             # History
-            history.error_history.append(np.mean(e))
+            history.loss_history.append(np.mean(loss))
 
             train_acc = nr_correct / x.shape[0]
             test_acc = 0

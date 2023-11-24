@@ -24,7 +24,7 @@ dense_layers = [
 ]
 
 nn = NeuralNetwork(dense_layers, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=3, batch_size=10, validation_data=(x_test, y_test))
+nn.train(x_train, y_train, epochs=10, batch_size=20, validation_data=(x_test, y_test))
 
 accuracy = nn.predict(x_test, y_test)
 
