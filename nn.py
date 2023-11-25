@@ -1,5 +1,4 @@
 import numpy as np
-import utils
 from history import History
 
 
@@ -11,7 +10,7 @@ class NeuralNetwork:
         for i in range(1, len(self.layers)):
             self.hidden_layers_sizes.append(layers[i].input_size)
 
-    def feedforward(self, x):
+    def forward(self, x):
         y_output = x
 
         for layer in self.layers:
@@ -65,7 +64,7 @@ class NeuralNetwork:
                 batch_y = batch_y.T
 
                 # Forward and backward pass for the batch
-                y_output = self.feedforward(batch_x)
+                y_output = self.forward(batch_x)
                 nr_correct += np.sum(np.argmax(y_output, axis=0) == np.argmax(batch_y, axis=0))
                 self.backward(batch_y, y_output)
 
@@ -96,7 +95,7 @@ class NeuralNetwork:
             img.shape += (1,)
             l.shape += (1,)
 
-            y_output = self.feedforward(img)
+            y_output = self.forward(img)
             nr_correct += int(np.argmax(y_output) == np.argmax(l))
 
         return nr_correct / x.shape[0]

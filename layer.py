@@ -1,6 +1,5 @@
 import numpy as np
 import utils
-from scipy import signal
 
 
 class Layer:
@@ -15,7 +14,7 @@ class Layer:
     def backward(self, delta, learning_rate):
         pass
 
-    def grad(self, delta, activation):
+    def update_grad(self, delta, activation):
         pass
 
 
@@ -40,40 +39,6 @@ class DenseLayer(Layer):
     def update_grad(self, delta, prev_activation):
         delta = self.weights.T.dot(delta) * apply_activation_derivative(prev_activation, self.input)
         return delta
-
-
-class ConvolutionalLayer(Layer):
-    def __init__(self, input_shape, kernel_size, num_of_kernels, activation="sigmoid"):
-        super().__init__()
-        input_height, input_width, input_depth = input_shape
-        self.num_of_kernels = num_of_kernels
-        self.input_shape = input_shape
-        self.input_depth = input_depth
-        self.output_shape = (num_of_kernels, input_height - kernel_size + 1, input_width - kernel_size + 1)
-        self.kernels_shape = (num_of_kernels, input_depth, kernel_size, kernel_size)
-        self.kernels = np.random.randn(*self.kernels_shape)
-        self.biases = np.random.randn(*self.output_shape)
-
-    def forward(self, input):
-        self.input = input
-        self.output = np.copy(self.biases)
-        for i in range(self.num_of_kernels):
-            for j in range(self.input_depth):
-                self.output[i] += signal.correlate2d(self.input[j], self.kernels[i, j], "valid")
-        return self.output
-
-    def backward(self, delta, learn_rate):
-        kernels_gradient = np.zeros(self.kernels_shape)
-
-        for i in range(self.num_of_kernels):
-            for j in range(self.input_depth):
-                kernels_gradient[i, j] = signal.correlate2d(self.input[j], delta[i], "valid")
-
-        self.kernels -= learn_rate * kernels_gradient
-        self.biases -= learn_rate * delta
-
-    def update_grad(self, delta, prev_activation):
-        pass
 
 
 def apply_activation(activation, u):
