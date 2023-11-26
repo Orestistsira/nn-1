@@ -1,4 +1,6 @@
 import numpy as np
+
+import utils
 from history import History
 
 
@@ -89,7 +91,7 @@ class NeuralNetwork:
         # Plot the training history
         history.plot_training_history()
 
-    def predict(self, x, y):
+    def predict(self, x, y, show_image=False):
         nr_correct = 0
         for img, l in zip(x, y):
             img.shape += (1,)
@@ -97,5 +99,8 @@ class NeuralNetwork:
 
             y_output = self.forward(img)
             nr_correct += int(np.argmax(y_output) == np.argmax(l))
+
+            if show_image:
+                utils.show_image(img, l, y_output)
 
         return nr_correct / x.shape[0]

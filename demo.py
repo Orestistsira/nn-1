@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import utils
 from layer import DenseLayer
@@ -15,18 +17,23 @@ y_train = np.concatenate([y_train_1, y_train_2, y_train_3, y_train_4, y_train_5]
 x_test, y_test = utils.unpickle("cifar-10/test_batch")
 
 input_size = 3072
-hidden_layer_size = 50
 output_size = 10
 
+hidden_layer_size_1 = 500
+hidden_layer_size_2 = 500
+
 dense_layers = [
-    DenseLayer(input_size, hidden_layer_size, activation="sigmoid"),
-    DenseLayer(hidden_layer_size, output_size, activation="softmax")
+    DenseLayer(input_size, hidden_layer_size_1, activation="sigmoid"),
+    DenseLayer(hidden_layer_size_1, hidden_layer_size_2, activation="sigmoid"),
+    DenseLayer(hidden_layer_size_2, output_size, activation="softmax")
 ]
 
+start_time = time.time()
 nn = NeuralNetwork(dense_layers, learn_rate=0.01)
-nn.train(x_train, y_train, epochs=10, batch_size=20, validation_data=(x_test, y_test))
+nn.train(x_train, y_train, epochs=30, batch_size=50, validation_data=(x_test, y_test))
+print('Model successfully trained in %.2fs' % (time.time() - start_time))
 
-accuracy = nn.predict(x_test, y_test)
+accuracy = nn.predict(x_test, y_test, show_image=False)
 
 # Print the accuracy results
 print(f"Test accuracy: {accuracy:.2f}")

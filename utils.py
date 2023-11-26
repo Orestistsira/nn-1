@@ -53,16 +53,9 @@ def softmax(x):
     return e_x / e_x.sum(axis=0)
 
 
-def softmax_derivative(x):
-    s = softmax(x)
-    outer = np.outer(s, s)
-    diag = np.diag(s)
-    return diag - outer
-
-
 def show_image(x, y, prediction):
     classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-
+    plt.figure()
     im_r = x[0:1024].reshape(32, 32)
     im_g = x[1024:2048].reshape(32, 32)
     im_b = x[2048:].reshape(32, 32)
